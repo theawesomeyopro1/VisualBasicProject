@@ -1,5 +1,7 @@
-﻿Imports System.Drawing
+Imports System.Drawing
+
 Imports System.Drawing.Drawing2D
+
 Imports System.Drawing.Text
 
 Public Class GameWindow
@@ -7,88 +9,149 @@ Public Class GameWindow
 #Region "GameWindowSetup"
 
     Private antialiasing = False
+
     Private backBuffer As Image
+
     Private bufferDisp As Graphics
+
     Private gDisplay As Graphics
+
     Private gRefresh As Timer
+
     Dim frequency As Integer = 10
+
     Private projs As List(Of Projectile) = New List(Of Projectile)
+
     Private r = New Random()
 
     Private Shadows Sub Paint(g As Graphics)
+
         GameDraw(g)
+
     End Sub
 
     Private Sub initGDI(width As Integer, height As Integer)
+
         Dim dispsize As Size = New Size(width, height)
+
         backBuffer = New Bitmap(width, height)
+
         bufferDisp = Graphics.FromImage(backBuffer)
+
         gDisplay = Me.CreateGraphics()
+
         gDisplay.CompositingMode = CompositingMode.SourceCopy
+
         gDisplay.CompositingQuality = CompositingQuality.AssumeLinear
+
         gDisplay.InterpolationMode = InterpolationMode.NearestNeighbor
+
         gDisplay.TextRenderingHint = TextRenderingHint.SystemDefault
+
         gDisplay.PixelOffsetMode = PixelOffsetMode.HighSpeed
 
         If antialiasing Then
+
             bufferDisp.SmoothingMode = SmoothingMode.AntiAlias And SmoothingMode.HighSpeed
+
             bufferDisp.TextRenderingHint = TextRenderingHint.AntiAlias And TextRenderingHint.SystemDefault
+
         End If
 
         bufferDisp.CompositingMode = CompositingMode.SourceOver
+
         bufferDisp.CompositingQuality = CompositingQuality.HighSpeed
+
         bufferDisp.InterpolationMode = InterpolationMode.Low
+
         bufferDisp.PixelOffsetMode = PixelOffsetMode.Half
 
         gDisplay.Clear(Color.SlateGray)
+
     End Sub
 
+
     Private Sub GameWindow_Init()
+
         Dim dispsize As Size = displaySize
+
         Me.SetStyle(ControlStyles.AllPaintingInWmPaint, True)
+
         Me.SetStyle(ControlStyles.OptimizedDoubleBuffer, True)
+
         Me.SetStyle(ControlStyles.UserPaint, False)
+
         Me.Size = dispsize
+
         Me.ClientSize = dispsize
+
         Me.FormBorderStyle = FormBorderStyle.FixedSingle
+
         Me.SetStyle(ControlStyles.FixedHeight, True)
+
         Me.SetStyle(ControlStyles.FixedWidth, False)
+
         Me.MinimumSize = displaySize
+
         Me.MaximumSize = displaySize
+
         Me.Update()
+
         Me.Location = New Point(0, 0)
+
         initGDI(dispsize.Width, displaySize.Height)
 
         gRefresh = New Timer()
+
         With (gRefresh)
+
             .Interval = frequency
+
             .Enabled = True
+
         End With
 
         AddHandler gRefresh.Tick, Sub() GameLoop()
+
     End Sub
 
     Private Sub GameLoop()
+
         GameLogic()
+
         If Me.Disposing = False And Me.IsDisposed = False And Me.Visible Then
+
             Try
+
                 Paint(bufferDisp)
+
                 gDisplay.DrawImageUnscaled(backBuffer, New Point(0, 0))
+
             Catch ex As Exception
+
                 Console.WriteLine(ex)
+
             End Try
+
         End If
+
     End Sub
 
 #End Region
 
     Public Shared displaySize As Size = New Size(700, 700)
+
     Dim rand As Random = New Random()
 
+
     Private Sub GameWindowLoad(sender As Object, e As EventArgs) Handles MyBase.Load
+
         GameWindow_Init()
 
-        ' Initialize enemies
+
+
+
+
         enemy1.X = 200
         enemy1.Y = 200
         enemy1.Size = 40
@@ -96,47 +159,68 @@ Public Class GameWindow
         enemy1.Hspeed = 4
         enemy1.Vspeed = 4
 
+
         enemy2.X = 200
         enemy2.Y = 100
         enemy2.Size = 70
         enemy2.Color = Color.Red
         enemy2.Hspeed = 4
         enemy2.Vspeed = 4
+
+
+
+
+
+        'For i = 1 To 10
+
+        '    Dim player = New Player("p1")
+
+        '    player.X = rand.Next(50, 650)
+
+        '    player.Y = rand.Next(50, 650)
+
+        '    player.Size = rand.Next(30, 70)
+
+        '    Dim r = rand.Next(0, 255)
+
+        '    Dim g = rand.Next(0, 255)
+
+        '    Dim b = rand.Next(0, 255)
+
+        '    player.Color = Color.FromArgb(r, g, b)
+
+        '    'add player to list
+
+        '    players.add(player)
+
+
+        'Next
+
     End Sub
 
     Private Sub GameLogic()
-        ' Update enemies' positions
-        enemy1.X += enemy1.Hspeed
-        enemy2.X += enemy2.Hspeed
 
-        ' Reverse direction when hitting screen edges
-        If enemy1.X > Me.ClientSize.Width - enemy1.Size Or enemy1.X < 0 Then
-            enemy1.Hspeed = -enemy1.Hspeed
-        End If
-
-        If enemy2.X > Me.ClientSize.Width - enemy2.Size Or enemy2.X < 0 Then
-            enemy2.Hspeed = -enemy2.Hspeed
-        End If
-
-        ' Check for collisions with projectiles and reverse speed if a collision occurs
-        For Each proj As Projectile In projs
-            If CheckCollision(proj, enemy1) Then
-                enemy1.Hspeed = -enemy1.Hspeed ' Reverse direction on collision with projectile
-            End If
-
-            If CheckCollision(proj, enemy2) Then
-                enemy2.Hspeed = -enemy2.Hspeed ' Reverse direction on collision with projectile
-            End If
-        Next
     End Sub
+
+
+    Dim enemy1 = New Enemy("m1")
+    Dim enemy2 = New Enemy("m1")
+
+
+
+
 
     Private Sub GameDraw(g As Graphics)
+
         g.Clear(Color.Black)
+
         enemy1.draw(g)
         enemy2.draw(g)
+
     End Sub
 
-    ' --- Projectile Logic ---
+
+    'projectile
     ' Constants for physics
     Dim gravity As Double = 9.8 ' m/s²
     Dim time As Double = 0 ' Time in seconds
@@ -171,41 +255,18 @@ Public Class GameWindow
 
         ' Update projectile position using motion equations
         Dim x As Integer = startX + CInt(vx * time)
-        Dim y As Integer = startY - CInt(vy * time + 0.5 * gravity * time ^ 2)  ' Invert y to reflect gravity
+        Dim y As Integer = startY + CInt(vy * time + 0.5 * gravity * time ^ 2)
 
         ' Move the projectile
         projectile.Location = New Point(x, y)
 
-        ' Check for collision with enemy1 (stop at first collision)
-        If CheckCollision(projectile, enemy1) Then
-            timer.Stop()
-            Me.Controls.Remove(projectile) ' Remove projectile on collision
-            Exit Sub
-        End If
-
-        ' Check for collision with enemy2 (stop at first collision)
-        If CheckCollision(projectile, enemy2) Then
-            timer.Stop()
-            Me.Controls.Remove(projectile) ' Remove projectile on collision
-            Exit Sub
-        End If
-
-        ' Stop the timer if projectile reaches the ground (stop falling once it touches the bottom)
+        ' Stop the timer if projectile reaches the ground
         If y >= Me.ClientSize.Height - projectile.Height Then
             timer.Stop()
         End If
     End Sub
 
-    ' Collision detection function
-    Private Function CheckCollision(proj As Panel, enemy As Enemy) As Boolean
-        Dim projRect As New Rectangle(proj.Location, proj.Size)
-        Dim enemyRect As New Rectangle(New Point(enemy.X, enemy.Y), New Size(enemy.Size, enemy.Size))
-
-        ' Return true if the projectile's rectangle intersects the enemy's rectangle
-        Return projRect.IntersectsWith(enemyRect)
-    End Function
-
-    ' Handle Mouse Clicks to launch a new projectile
+    ' Handle Mouse Clicks
     Private Sub Form1_MouseClick(sender As Object, e As MouseEventArgs) Handles Me.MouseClick
         ' Reset time
         time = 0
